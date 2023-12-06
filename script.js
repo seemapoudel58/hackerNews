@@ -18,15 +18,11 @@ const fetchStories = async (page) => {
       const storyResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}.json`);
       const storyDetails = await storyResponse.json();
 
-      const commentsResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}/kids.json`);
-      const comments = await commentsResponse.json();
-
       return {
         storyId,
         title: storyDetails.title,
         url: storyDetails.url,
         points: storyDetails.score || 0,
-        comments: comments ? comments.length : 0,
       };
     });
 
@@ -47,40 +43,46 @@ const attachStoryLinkListeners = () => {
       event.preventDefault(); // Prevent default behavior (e.g., page reload)
 
       const storyId = link.dataset.storyId;
-      await fetchAndDisplayComments(storyId);
+      window.location.href = `story.html?storyId=${storyId}`;
     });
   });
 };
 
-
-const fetchAndDisplayComments = async (storyId) => {
-  const storyResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}.json`);
-  const storyDetails = await storyResponse.json();
-
-  const commentsResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}/kids.json`);
-  const comments = await commentsResponse.json();
-
-  displayComments(storyDetails, comments);
-};
-
 const displayComments = (storyDetails, comments) => {
-  // Clear existing comments
-  const commentsListElement = document.getElementById('comments');
-  commentsListElement.innerHTML = '';
-
   // Display story details
   const storyElement = document.createElement('div');
   storyElement.innerHTML = `
     <h2>${storyDetails.title}</h2>
-    <p>Points: ${storyDetails.score || 0} | Comments: ${comments ? comments.length : 0}</p>
+    <p>Points: ${storyDetails.score || 0} | Comments: ${comments.length}</p>
   `;
-  commentsListElement.appendChild(storyElement);
+  document.body.appendChild(storyElement);
 
-  // Display comments
+  // Display comments for the specific story
+  const commentsListElement = document.createElement('ul');
   for (const comment of comments) {
     const commentElement = document.createElement('li');
     commentElement.textContent = comment.text;
     commentsListElement.appendChild(commentElement);
+  }
+  document.body.appendChild(commentsListElement);
+};
+
+const fetchAndDisplayComments = async (storyId) => {
+  try {
+    const storyResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}.json`);
+    const storyDetails = await storyResponse.json();
+
+    const commentsIds = storyDetails.kids || [];
+    const commentsPromises = commentsIds.map(commentId =>
+      fetch(`https://hacker-news.firebaseio.com/v0/item/${commentId}.json`)
+        .then(response => response.json())
+    );
+
+    const comments = await Promise.all(commentsPromises);
+
+    displayComments(storyDetails, comments);
+  } catch (error) {
+    console.error('Error fetching story details or comments:', error);
   }
 };
 
@@ -108,3 +110,5 @@ prevButton.addEventListener('click', prevPage);
 
 document.body.appendChild(prevButton);
 document.body.appendChild(nextButton);
+
+attachStoryLinkListeners();
