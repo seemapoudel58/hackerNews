@@ -66,3 +66,14 @@ const prevPage = () => {
 };
 
 fetchStories(currentPage);
+
+const nextButton = document.createElement('button');
+nextButton.textContent = 'Next';
+nextButton.addEventListener('click', nextPage);
+
+const prevButton = document.createElement('button');
+prevButton.textContent = 'Previous';
+prevButton.addEventListener('click', prevPage);
+
+document.body.appendChild(prevButton);
+document.body.appendChild(nextButton);
