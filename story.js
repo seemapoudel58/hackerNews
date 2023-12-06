@@ -1,12 +1,14 @@
 const storyId = new URLSearchParams(window.location.search).get('storyId');
 
-fetchComments(storyId);
+if (storyId) {
+  fetchComments(storyId);
+}
 
 function fetchComments(storyId) {
   fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}.json`)
     .then(response => response.json())
     .then(storyDetails => {
-      if (storyDetails.kids) {
+      if (storyDetails && storyDetails.kids) {
         fetchCommentsFromKids(storyDetails.kids);
       }
     });
@@ -30,6 +32,8 @@ function fetchCommentsFromKids(commentIds) {
 
 function displayComments(comments) {
   const commentsListElement = document.getElementById('comments');
+  commentsListElement.innerHTML = ''; // Clear existing comments
+
   for (const comment of comments) {
     const commentElement = document.createElement('li');
     commentElement.textContent = comment.text;
