@@ -1,7 +1,10 @@
 const storiesContainer = document.getElementById('stories');
 const loadingElement = document.querySelector('.loading');
-const itemsPerPage = 25;
+const itemsPerPage = 10;
 let currentPage = 1;
+
+const nextButton = document.querySelector('.next');
+const prevButton = document.querySelector('.Previous');
 
 const fetchStories = async (page) => {
   try {
@@ -14,7 +17,7 @@ const fetchStories = async (page) => {
     const end = start + itemsPerPage;
     const currentPageStoryIds = storyIds.slice(start, end);
 
-    const storyPromises = currentPageStoryIds.map(async (storyId) => {
+    const storyPromises = currentPageStoryIds.map(async (storyId, index) => {
       const storyResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}.json`);
       const storyDetails = await storyResponse.json();
 
@@ -23,6 +26,7 @@ const fetchStories = async (page) => {
 
       return {
         storyId,
+        number: start + index + 1, // Calculate the story number
         title: storyDetails.title,
         url: storyDetails.url,
         points: storyDetails.score || 0,
@@ -33,6 +37,9 @@ const fetchStories = async (page) => {
     const stories = await Promise.all(storyPromises);
 
     displayStories(stories);
+
+    nextButton.style.display = 'block';
+    prevButton.style.display = 'block';
   } catch (error) {
     console.error('Error fetching stories:', error);
   } finally {
@@ -45,9 +52,15 @@ const displayStories = (stories) => {
 
   stories.forEach((story) => {
     const storyElement = document.createElement('div');
+    storyElement.classList.add('story-box');
     storyElement.innerHTML = `
-      <a href="story.html?storyId=${story.storyId}" target="_blank">${story.title}</a>
-      <p>Points: ${story.points} | Comments: <span class="comment-count">${story.comments || 0}</span></p>
+      <div class="story-content">
+        <div class="story-number">${story.number}</div>
+        <div class="story-details">
+          <p><a href="story.html?storyId=${story.storyId}" target="_blank">${story.title}</a></p>
+          <p class="details-line">Points: ${story.points} | Comments: ${story.comments || 0}</p>
+        </div>
+      </div>
     `;
     storiesContainer.appendChild(storyElement);
   });
@@ -65,15 +78,13 @@ const prevPage = () => {
   }
 };
 
-fetchStories(currentPage);
+// Initially hide the buttons
+nextButton.style.display = 'none';
+prevButton.style.display = 'none';
 
-const nextButton = document.createElement('button');
-nextButton.textContent = 'Next';
+// Attach event listeners
 nextButton.addEventListener('click', nextPage);
-
-const prevButton = document.createElement('button');
-prevButton.textContent = 'Previous';
 prevButton.addEventListener('click', prevPage);
 
-document.body.appendChild(prevButton);
-document.body.appendChild(nextButton);
+// Fetch stories on page load
+fetchStories(currentPage);
