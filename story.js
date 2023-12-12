@@ -45,27 +45,50 @@ const displayComments = (storyDetails, comments) => {
   const commentsListElement = document.createElement('ul');
   commentsListElement.classList.add('comments-list');
 
-  for (const comment of comments) {
-    const commentElement = document.createElement('li');
-    commentElement.classList.add('comment');
-
-    const commentContent = document.createElement('div');
-    commentContent.classList.add('comment-content');
-    commentContent.textContent = comment.text;
-
-    const commentMeta = document.createElement('div');
-    commentMeta.classList.add('comment-meta');
-    commentMeta.innerHTML = `
-      <span class="comment-author">${comment.by}</span>
-      <span class="comment-time">${formatTime(comment.time)}</span>
-    `;
-
-    commentElement.appendChild(commentContent);
-    commentElement.appendChild(commentMeta);
+  comments.forEach(comment => {
+    const commentElement = createCommentElement(comment, comments);
     commentsListElement.appendChild(commentElement);
-  }
+  });
 
   commentsContainer.appendChild(commentsListElement);
+};
+
+const createCommentElement = (comment, allComments) => {
+  const commentElement = document.createElement('li');
+  commentElement.classList.add('comment');
+
+  const commentContent = document.createElement('div');
+  commentContent.classList.add('comment-content');
+  commentContent.innerHTML = comment.text;
+
+  const commentMeta = document.createElement('div');
+  commentMeta.classList.add('comment-meta');
+  commentMeta.innerHTML = `
+    <span class="comment-author">${comment.by}</span>
+    <span class="comment-time">${formatTime(comment.time)}</span>
+  `;
+
+  commentElement.appendChild(commentContent);
+  commentElement.appendChild(commentMeta);
+
+  // Check if the comment has replies
+  if (comment.kids && comment.kids.length > 0 && Array.isArray(allComments)) {
+    const repliesListElement = document.createElement('ul');
+    repliesListElement.classList.add('replies-list');
+
+    // Recursively create elements for each reply
+    const replyComments = allComments.filter(reply => comment.kids.includes(reply.id));
+
+    // Recursively create elements for each reply
+    replyComments.forEach(reply => {
+      const replyElement = createCommentElement(reply, allComments);
+      repliesListElement.appendChild(replyElement);
+    });
+
+    commentElement.appendChild(repliesListElement);
+  }
+
+  return commentElement;
 };
 
 // Helper function to format Unix timestamp to human-readable time
