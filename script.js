@@ -21,16 +21,13 @@ const fetchStories = async (page) => {
       const storyResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}.json`);
       const storyDetails = await storyResponse.json();
 
-      const commentsResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}/kids.json`);
-      const comments = await commentsResponse.json();
-
       return {
         storyId,
         number: start + index + 1, // Calculate the story number
         title: storyDetails.title,
         url: storyDetails.url,
         points: storyDetails.score || 0,
-        comments: comments ? comments.length : 0,
+        comments: storyDetails.descendants || 0, // Fetch the number of comments
       };
     });
 
