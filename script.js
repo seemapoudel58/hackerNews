@@ -23,7 +23,7 @@ const fetchStories = async (page) => {
 
       return {
         storyId,
-        number: start + index + 1, // Calculate the story number
+        number: start + index + 1, 
         title: storyDetails.title,
         url: storyDetails.url,
         points: storyDetails.score || 0,
@@ -54,13 +54,15 @@ const displayStories = (stories) => {
       <div class="story-content">
         <div class="story-number">${story.number}</div>
         <div class="story-details">
-          <p><a href="story.html?storyId=${story.storyId}" target="_blank">${story.title}</a></p>
+          <p><a href="story.html?storyId=${story.storyId}" >${story.title}</a></p>
           <p class="details-line">Points: ${story.points} | Comments: ${story.comments || 0}</p>
         </div>
       </div>
     `;
     storiesContainer.appendChild(storyElement);
   });
+  const pageInfoElement = document.getElementById('current-page');
+  pageInfoElement.textContent = currentPage;
 };
 
 const nextPage = () => {
@@ -75,13 +77,10 @@ const prevPage = () => {
   }
 };
 
-// Initially hide the buttons
 nextButton.style.display = 'none';
 prevButton.style.display = 'none';
 
-// Attach event listeners
 nextButton.addEventListener('click', nextPage);
 prevButton.addEventListener('click', prevPage);
 
-// Fetch stories on page load
 fetchStories(currentPage);

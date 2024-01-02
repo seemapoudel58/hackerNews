@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
   const storyId = new URLSearchParams(window.location.search).get('storyId');
-
   if (storyId) {
     fetchAndDisplayComments(storyId);
   } else {
@@ -9,7 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const fetchAndDisplayComments = async (storyId) => {
+  const loadingElement = document.querySelector('.loading');
   try {
+    loadingElement.style.display = 'block';
     const storyResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}.json`);
     const storyDetails = await storyResponse.json();
 
@@ -29,11 +30,16 @@ const fetchComments = async (commentId) => {
     const commentResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${commentId}.json`);
     const commentDetails = await commentResponse.json();
 
+    if (!commentDetails) {
+      return []; 
+    }
+
     const commentPromises = [commentDetails];
 
     if (commentDetails.kids) {
       const replies = await Promise.all(commentDetails.kids.map((replyId) => fetchComments(replyId)));
-      commentPromises.push(...replies.flat());
+      
+      commentPromises.push(...replies.flat().filter(Boolean));
     }
 
     return commentPromises;
@@ -54,7 +60,6 @@ const displayComments = (comments) => {
     const createCommentElement = (comment) => {
       const commentElement = document.createElement('li');
 
-      // Check if the properties exist before using them
       const commentTime = comment.time ? new Date(comment.time * 1000) : null;
       const author = comment.by || 'Unknown Author';
 
@@ -66,8 +71,8 @@ const displayComments = (comments) => {
       return commentElement;
     };
 
-    const appendComments = (parentElement, comments) => {
-      comments.forEach((comment) => {
+    const appendComments = async (parentElement, comments) => {
+      for (const comment of comments) {
         const commentElement = createCommentElement(comment);
         parentElement.appendChild(commentElement);
 
@@ -75,9 +80,16 @@ const displayComments = (comments) => {
           const replyContainer = document.createElement('ul');
           replyContainer.classList.add('reply-container');
           parentElement.appendChild(replyContainer);
-          appendComments(replyContainer, comment.kids);
+          
+          const replies = await Promise.all(comment.kids.map((replyId) => fetchComments(replyId)));
+          appendComments(replyContainer, replies.flat().filter(Boolean));
         }
-      });
+        // if (comment.kids) {
+        //   // Append replies directly to the comment element
+        //   const replies = await Promise.all(comment.kids.map((replyId) => fetchComments(replyId)));
+        //   appendComments(commentElement, replies.flat().filter(Boolean));
+        // }
+      }
     };
 
     appendComments(commentsContainer, comments);
