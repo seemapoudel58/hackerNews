@@ -41,7 +41,11 @@ const fetchComments = async (commentId) => {
       );
       comment.replies = await Promise.all(replyPromises);
     }
-    return comment;
+    if (!comment.deleted) {
+      return comment;
+    } else {
+      return null; 
+    }
   } catch (error) {
     console.error(`Error fetching comment ${commentId}: ${error.message}`);
     throw error;
