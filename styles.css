@@ -95,21 +95,6 @@ a:hover {
   flex: 1;
 }
 
-#comments li {
-  border-bottom: 1px solid #ddd;
-}
-
-#comments li p {
-  margin-bottom: 5px;
-}
-
-#comments li li {
-  margin-left: 20px; 
-}
-
-#comments li li:not(:first-child) {
-  margin-top: 5px; 
-}
 
 #page-info {
   position: absolute;
