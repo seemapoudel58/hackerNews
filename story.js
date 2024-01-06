@@ -41,7 +41,6 @@ const fetchComments = async (commentId) => {
       );
       comment.replies = await Promise.all(replyPromises);
     }
-
     return comment;
   } catch (error) {
     console.error(`Error fetching comment ${commentId}: ${error.message}`);
