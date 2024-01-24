@@ -9,6 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const fetchAndDisplayComments = async (storyId) => {
   const loadingElement = document.querySelector(".loading");
+  const commentsContainer = document.getElementById("comments");
+
   try {
     loadingElement.style.display = "block";
     const storyResponse = await fetch(
@@ -20,14 +22,25 @@ const fetchAndDisplayComments = async (storyId) => {
       const commentsAndReplies = await Promise.all(
         storyDetails.kids.map((commentId) => fetchComments(commentId))
       );
-      displayComments(commentsAndReplies.flat());
+
+      // Check if there are no comments
+      if (commentsAndReplies.flat().length === 0) {
+        commentsContainer.innerHTML = "<p>No comments available for this story.</p>";
+      } else {
+        displayComments(commentsAndReplies.flat());
+      }
     } else {
       console.error("No comments found for the given story ID.");
+      commentsContainer.innerHTML = "<p>No comments available for this story.</p>";
     }
   } catch (error) {
     console.error("Error fetching story details:", error);
+  } finally {
+    loadingElement.style.display = "none";
   }
 };
+
+
 const fetchComments = async (commentId) => {
   const apiUrl = `https://hacker-news.firebaseio.com/v0/item/${commentId}.json`;
 
@@ -41,10 +54,11 @@ const fetchComments = async (commentId) => {
       );
       comment.replies = await Promise.all(replyPromises);
     }
+
     if (!comment.deleted) {
       return comment;
     } else {
-      return null; 
+      return null;
     }
   } catch (error) {
     console.error(`Error fetching comment ${commentId}: ${error.message}`);
@@ -52,14 +66,13 @@ const fetchComments = async (commentId) => {
   }
 };
 
-
 const displayComments = (comments) => {
   const commentsContainer = document.getElementById("comments");
 
   commentsContainer.innerHTML = "";
 
   if (comments.length === 0) {
-    commentsContainer.innerHTML = "<p>No comments available.</p>";
+    commentsContainer.innerHTML = "<p>No comments available for this story.</p>";
   } else {
     const createCommentElement = (comment) => {
       const commentElement = document.createElement("li");
@@ -70,8 +83,8 @@ const displayComments = (comments) => {
       commentElement.innerHTML = `
         <p>${comment.text}</p>
         <p class="comment-details">by ${author}${
-        commentTime ? " on " + commentTime.toLocaleString() : ""
-      }</p>
+          commentTime ? " on " + commentTime.toLocaleString() : ""
+        }</p>
       `;
 
       return commentElement;
@@ -92,11 +105,6 @@ const displayComments = (comments) => {
           );
           appendComments(replyContainer, replies.flat().filter(Boolean));
         }
-        // if (comment.kids) {
-        //   // Append replies directly to the comment element
-        //   const replies = await Promise.all(comment.kids.map((replyId) => fetchComments(replyId)));
-        //   appendComments(commentElement, replies.flat().filter(Boolean));
-        // }
       }
     };
 
